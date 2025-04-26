@@ -110,76 +110,74 @@ UriEncode(Uri, RE := "[0-9A-Za-z]") {
     Return Res
 }
 
-; === Minimal JSON Load Implementation ===
+; === Minimal JSON Load ===
 JSON_Load(ByRef text) {
-    static quot := Chr(34)
-    pos := 0
-    return _parse()
-
-    _parse() {
-        global text, pos, quot
-        while (ch := SubStr(text, ++pos, 1)) {
-            if (InStr(" `t`r`n", ch))
-                continue
-            if (ch == "{") {
-                obj := {}
-                loop {
-                    ch := SubStr(text, ++pos, 1)
-                    if (InStr(" `t`r`n", ch))
-                        continue
-                    if (ch == "}")
-                        break
-                    if (ch != quot)
-                        return ""
-                    key := _parse_string()
-                    ch := SubStr(text, ++pos, 1)
-                    if (ch != ":")
-                        return ""
-                    val := _parse()
-                    obj[key] := val
-                    ch := SubStr(text, ++pos, 1)
-                    if (ch == "}")
-                        break
-                    if (ch != ",")
-                        return ""
-                }
-                return obj
-            }
-            else if (ch == quot) {
-                return _parse_string()
-            }
-            else if (RegExMatch(SubStr(text, pos), "^-?\d+(\.\d+)?", m)) {
-                pos += StrLen(m) - 1
-                return m
-            }
-            else if (SubStr(text, pos, 4) = "true") {
-                pos += 3
-                return true
-            }
-            else if (SubStr(text, pos, 5) = "false") {
-                pos += 4
-                return false
-            }
-            else if (SubStr(text, pos, 4) = "null") {
-                pos += 3
-                return ""
-            }
-            else return ""
-        }
-        return ""
-    }
-
-    _parse_string() {
-        global text, pos, quot
-        start := ++pos
-        while (i := InStr(text, quot, false, pos)) {
-            if (SubStr(text, i-1, 1) != "\\") {
-                str := SubStr(text, start, i-start)
-                pos := i
-                return StrReplace(str, "\\\"", "\"")
-            }
-            pos := i + 1
-        }
-        return ""
-    }
+    global __json_text := text, __json_pos := 0
+    return __JSON_Parse()
 }
+
+__JSON_Parse() {
+    global __json_text, __json_pos
+    static quot := Chr(34)
+
+    while (ch := SubStr(__json_text, ++__json_pos, 1)) {
+        if (InStr(" `t`r`n", ch))
+            continue
+        if (ch == "{") {
+            obj := {}
+            loop {
+                ch := SubStr(__json_text, ++__json_pos, 1)
+                if (InStr(" `t`r`n", ch))
+                    continue
+                if (ch == "}")
+                    break
+                if (ch != quot)
+                    return ""
+                key := __JSON_ParseString()
+                ch := SubStr(__json_text, ++__json_pos, 1)
+                if (ch != ":")
+                    return ""
+                val := __JSON_Parse()
+                obj[key] := val
+                ch := SubStr(__json_text, ++__json_pos, 1)
+                if (ch == "}")
+                    break
+                if (ch != ",")
+                    return ""
+            }
+            return obj
+        } else if (ch == quot) {
+            return __JSON_ParseString()
+        } else if (RegExMatch(SubStr(__json_text, __json_pos), "^-?\d+(\.\d+)?", m)) {
+            __json_pos += StrLen(m) - 1
+            return m
+        } else if (SubStr(__json_text, __json_pos, 4) = "true") {
+            __json_pos += 3
+            return true
+        } else if (SubStr(__json_text, __json_pos, 5) = "false") {
+            __json_pos += 4
+            return false
+        } else if (SubStr(__json_text, __json_pos, 4) = "null") {
+            __json_pos += 3
+            return ""
+        } else return ""
+    }
+    return ""
+}
+
+__JSON_ParseString() {
+    global __json_text, __json_pos
+    static quot := Chr(34)
+
+    start := ++__json_pos
+    while (i := InStr(__json_text, quot, false, __json_pos)) {
+        if (SubStr(__json_text, i-1, 1) != "\\") {
+            str := SubStr(__json_text, start, i-start)
+            __json_pos := i
+            return StrReplace(str, "\\\"", "\"")
+        }
+        __json_pos := i + 1
+    }
+    return ""
+}
+
