@@ -39,7 +39,7 @@ SendProcessedPrompt(PresetLabel) {
         }
 
         clipboardBackup := ClipboardAll
-		Clipboard = ""
+	Clipboard = ""
         Send, ^c
         ClipWait, 1
         userInput := Clipboard
