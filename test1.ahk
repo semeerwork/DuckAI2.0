@@ -60,7 +60,7 @@ SendProcessedPrompt(PresetLabel) {
 
         clean := CleanAIResponse(aiResponse)
         Send, %clean%
-		Sleep, 2000
+	Sleep, 2000
     } Catch e {
         MsgBox, 16, Unexpected Error, % "Something went wrong:`n" . e.Message
     }
